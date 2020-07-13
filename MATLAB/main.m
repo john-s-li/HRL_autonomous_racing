@@ -29,20 +29,28 @@ import casadi.*
 n = 6; % num_states
 d = 2; % num_controls
 
-
 N = 10; % NMPC Horizon
 
 opti = Opti();
 
-% x = MX.sym('x',n, N); % States : [vx, vy, wz, e_psi, s, e_y] , should be N+1 but CASADI complains..
-% u = MX.sym('u',d, N); % Controls : [delta, accel]
+% Variables for Opti() stack (these will be denotes in all caps)
+X = opti.variable(n, N + 1); % States : [vx, vy, wz, e_psi, s, e_y]
+U = opti.variable(d, N); % Controls : [delta, accel]
 
-X = opti.variable(6, N + 1);
-U = opti.variable(2, N);
+DELTA = U(1,:);
+ACCEL = U(2,:);
 
-% Function handle variables
-x = MX.sym('x',6,1);
-u = MX.sym('u',2,1);
+VX = X(1,:);
+VY = X(2,:);
+WZ = X(3,:);    
+E_PSI = X(4,:);
+S = X(5,:);
+E_LAT = X(6,:);
+
+%% Build the ODE f(x,u) for dx = f(x,u) for CASADI Opti() stack 
+
+x = MX.sym('x',n,1);
+u = MX.sym('u',d,1);
 
 delta = u(1);
 accel = u(2);
@@ -53,8 +61,6 @@ wz = x(3); % yaw rate wrt/track frame
 e_psi = x(4); % headeing error wrt/track frame
 s = x(5); % arc length on centerline
 e_lat = x(6); % later error wrt/track centerline
-
-%% Define the ODE f(x,u) for dx = f(x,u)
 
 % Tire Split Angles (Negative due to our coordinate frame)
 alpha_f = delta - atan2( vy + lf * wz, vx );
@@ -77,50 +83,57 @@ de_psi = wz - (vx*cos(e_psi) - vy*sin(e_psi)) / ...
 ds = (vx*cos(e_psi)-vy*sin(e_psi))/(1 - get_curvature(s,track)*e_lat);
 de_lat = vx*sin(e_psi) + vy*cos(e_psi);
 
-f = Function('f',[x,u],[dvx; dvy; dwz; de_psi; ds; de_lat]);
+f_vec = [dvx; dvy; dwz; de_psi; ds; de_lat];
+f = Function('f',{x,u},{f_vec}); % Build CASADI function object
 
-%% Define constraints
-deltaT = 0.1;
+%% Dynamics Constraints
+dt = 0.1;
 
 % RK4 integration for dynamics constraints
 s_tot = 0;
 for i = 1:N-1
    k1 = f(X(:,i), U(:,i));   
-   k2 = f(X(:,i) + deltaT/2*k1, U(:,i));
-   k3 = f(X(:,i) + deltaT/2*k2, U(:,i));
-   k4 = f(X(:,i) + deltaT*k3, U(:,i));
-   x_next = X(:,i) + deltaT/6*(k1 + 2*k2 + 2*k3 +k4);
+   k2 = f(X(:,i) + dt/2*k1, U(:,i));
+   k3 = f(X(:,i) + dt/2*k2, U(:,i));
+   k4 = f(X(:,i) + dt*k3, U(:,i));
+   x_next = X(:,i) + dt/6*(k1 + 2*k2 + 2*k3 +k4);
    opti.subject_to(X(:,i+1) == x_next)
-   s_tot = s_tot + s(i);
 end
 
-
-% Path constraints
-%opti.subject_to(e_lat <= track.width);
+%% Path constraints
+opti.subject_to(E_LAT <= track.width);
 % Input an obstacle avoidance constraint later
 
-% Friction constraints
+%% Friction constraints
 mu = 0.7; % avg friction coefficient for roads (assume rear wheel drive
-opti.subject_to(F_yf.^2 <= (mu.*F_nf).^2);
-opti.subject_to(F_yr.^2 + (accel./2).^2 <= (mu.*F_nr).^2)
 
-% Input Box Constraints
-opti.subject_to(-0.5 <= delta <= 0.5);
-opti.subject_to(-1 <= accel <= 1);
+% Redefine equations for optimization variable constraints
+ALPHA_F = DELTA - atan2( VY(1:10) + lf * WZ(1:10), VX(1:10));
+ALPHA_R = - atan2( VY(1:10) - lf * WZ(1:10) , VX(1:10));
 
-% Miscellaneous Constraints
-opti.subject_to(ds >= 0); % no going backwards
+F_YF = F_nf*Df*sin( Cf * atan2(1, Bf*ALPHA_F)); % Front Tire Lateral Force
+F_YR = F_nr*Dr*sin( Cr * atan2(1, Br*ALPHA_R)); % Rear Tire Lateral Force
 
-% Initial Conditions
-% opti.subject_to(x(:,1) == 0); % Initial Conditions
-opti.set_initial(vx(1),1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
+opti.subject_to(F_YF.^2 <= (mu.*F_nf).^2);
+opti.subject_to(F_YR.^2 + (ACCEL./2).^2 <= (mu.*F_nr).^2)
 
-% Objective function
-opti.minimize(-s_tot)
+%% Input Box Constraints
+opti.subject_to(-0.5 <= DELTA <= 0.5);
+opti.subject_to(-1 <= ACCEL <= 1);
+
+%% Miscellaneous Constraints
+DS = (VX.*cos(E_PSI)-VY.*sin(E_PSI))./(1 - get_curvature(S,track).*E_LAT);
+
+opti.subject_to(DS >= 0); % no going backwards
+
+%% Initial Conditions
+opti.set_initial(VX(1),1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
+
+%% Objective function
+opti.minimize(-sum(S));
 
 %% Optimization 
 opti.solver('ipopt');
-
 sol = opti.solve();
 
 
