@@ -13,6 +13,6 @@ function k = get_curvature(s, Track)
 %                  
 %     k = Track.pointAndTangent(index,end);
 
-    k = 1/(-4); % return a constant signed curvature for now for r = -4 (clockwise circle)
+    k = 
     
 end
