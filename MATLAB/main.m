@@ -78,6 +78,7 @@ f = @(x,u) [dvx; dvy; dwz; de_psi; ds; de_lat];
 dt = T/N;
 
 % RK4 integration
+s_tot = 0;
 for i = 1:N-1
    k1 = f(x(:,i), u(:,i));
    k2 = f(x(:,i) + dt/2*k1, u(:,i));
@@ -85,11 +86,13 @@ for i = 1:N-1
    k4 = f(x(:,i) + dt*k3, u(:,i));
    x_next = x(:,i) + dt/6*(k1 + 2*k2 + 2*k3 +k4);
    opti.subject_to(x(:,i+1) == x_next)
+   s_tot = s_tot + x(5,i);
 end
 
 % Path constraints
 opti.subject_to(e_lat <= track.width);
 % Input an obstacle avoidance constraint later
+
 % Friction constraints
 mu = 0.7; % avg friction coefficient for roads (assume rear wheel drive
 opti.subject_to(F_yf.^2 <= (mu.*F_nf).^2);
@@ -100,14 +103,15 @@ opti.subject_to(-0.5 <= delta <= 0.5);
 opti.subject_to(-1 <= accel <= 1);
 
 % Boundary constraints
-opti.subject_to(x(:,1) == 0); % Initial Conditions
+% opti.subject_to(x(:,1) == 0); % Initial Conditions
+opti.set_initial(x,0);
 
 % Miscellaneous Constraints
 opti.subject_to(T >= 0);
 opti.subject_to(ds >= 0); % no going backwards
 
 % Objective function
-opti.minimize(T)
+opti.minimize(-s_tot)
 
 %% Optimization 
 opti.solver('ipopt');
