@@ -29,7 +29,7 @@ import casadi.*
 n = 6; % num_states
 d = 2; % num_controls
 
-N = 10; % NMPC Horizon
+N = 5; % NMPC Horizon
 
 opti = Opti();
 
@@ -75,12 +75,11 @@ F_yr = F_nr*Dr*sin( Cr * atan2(1, Br*alpha_r)); % Rear Tire Lateral Force
 % ODEs
 % NOTE: for now, keep k(s) constant (sym variables don't work with logical operators)
 
-dvx = 1/m*(accel - F_yf*sin(delta) + m*(wz*vy));
+dvx = 1/m*(m*accel - F_yf*sin(delta) + m*(wz*vy));
 dvy = 1/m*(F_yr + F_yf*sin(delta) - m*vx(1)*wz);
 dwz = 1/Iz*(F_yf*lf*cos(delta) - F_yr*lr); % No torque vectoring 
-de_psi = wz - (vx*cos(e_psi) - vy*sin(e_psi)) / ...
-         (1-get_curvature(s,track)*e_lat)*get_curvature(s,track);
 ds = (vx*cos(e_psi)-vy*sin(e_psi))/(1 - get_curvature(s,track)*e_lat);
+de_psi = wz - get_curvature(s,track)*ds;
 de_lat = vx*sin(e_psi) + vy*cos(e_psi);
 
 f_vec = [dvx; dvy; dwz; de_psi; ds; de_lat];
@@ -108,14 +107,18 @@ opti.subject_to(E_LAT <= track.width);
 mu = 0.7; % avg friction coefficient for roads (assume rear wheel drive
 
 % Redefine equations for optimization variable constraints
-ALPHA_F = DELTA - atan2( VY(1:10) + lf * WZ(1:10), VX(1:10));
-ALPHA_R = - atan2( VY(1:10) - lf * WZ(1:10) , VX(1:10));
+ALPHA_F = DELTA - atan2( VY(1:N) + lf * WZ(1:N), VX(1:N));
+ALPHA_R = - atan2( VY(1:N) - lf * WZ(1:N) , VX(1:N));
 
 F_YF = F_nf*Df*sin( Cf * atan2(1, Bf*ALPHA_F)); % Front Tire Lateral Force
 F_YR = F_nr*Dr*sin( Cr * atan2(1, Br*ALPHA_R)); % Rear Tire Lateral Force
 
 opti.subject_to(F_YF.^2 <= (mu.*F_nf).^2);
 opti.subject_to(F_YR.^2 + (ACCEL./2).^2 <= (mu.*F_nr).^2)
+
+%% State Constraints
+opti.subject_to(-2 <= E_LAT <= 2);
+opti.subject_to(VX <= 1);
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -124,18 +127,23 @@ opti.subject_to(-1 <= ACCEL <= 1);
 %% Miscellaneous Constraints
 DS = (VX.*cos(E_PSI)-VY.*sin(E_PSI))./(1 - get_curvature(S,track).*E_LAT);
 
+opti.subject_to(VX >= 0);
 opti.subject_to(DS >= 0); % no going backwards
+opti.subject_to(S <= track.trackLength);
 
 %% Initial Conditions
-opti.set_initial(VX(1),1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
+opti.set_initial(VX, 1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
+opti.set_initial(ACCEL, 0.5);
 
 %% Objective function
 opti.minimize(-sum(S));
 
 %% Optimization 
 opti.solver('ipopt');
+% opti.callback(@(i) plot(opti.debug.value(S)))
 sol = opti.solve();
 
+sol.value(X)
 
 
 
