@@ -25,7 +25,7 @@ import casadi.*
 n = 4; % num_states
 d = 2; % num_controls
 
-N = 5; % NMPC Horizon
+N = 20; % NMPC Horizon
 
 opti = Opti();
 
@@ -96,7 +96,7 @@ end
 
 %% State Constraints
 opti.subject_to(-track.width <= E_LAT <= track.width);
-opti.subject_to(-2 <= V <= 2);
+opti.subject_to(-2 <= V <= 2); 
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -109,7 +109,7 @@ DS = V(1:N).*(cos(E_PSI(1:N) + BETA))./(1 - E_LAT(1:N)*k);
 opti.subject_to(DS > 0); % no going backwards
 
 %% Initial Conditions
-opti.set_initial(V(1), 1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
+opti.set_initial(V(1), 0.5); % Bicylce Model ill-defined for slow velocities
 
 %% Objective function
 opti.minimize(-sumsqr(S));
