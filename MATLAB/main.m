@@ -7,7 +7,7 @@ close all
 clc
 
 % Path Appending --------------------------------------
-addpath('apiFiles/casadi-linux-matlabR2014b-v3.5.1')
+addpath('apiFiles/casadi-linux-matlabR2014b-v3.5.1') % THIS IS ONLY FOR UBUNTU
 addpath('Classes')
 addpath('Utilities')
 
@@ -58,12 +58,12 @@ accel = u(2);
 vx = x(1); % velocity in x-axis wrt/vehicle frame
 vy = x(2); % velocity in y-axis wrt/vehicle frame
 wz = x(3); % yaw rate wrt/track frame
-e_psi = x(4); % headeing error wrt/track frame
+e_psi = x(4); % heading error wrt/track frame
 s = x(5); % arc length on centerline
 e_lat = x(6); % later error wrt/track centerline
 
 % Tire Split Angles (Negative due to our coordinate frame)
-alpha_f = delta - atan2( vy + lf * wz, vx );
+alpha_f = - delta + atan2( vy + lf * wz, vx );
 alpha_r = - atan2( vy - lf * wz , vx);
 
 F_nf = lf/(lf+lr)*m*g; % Front Tire Normal Load
@@ -89,7 +89,6 @@ f = Function('f',{x,u},{f_vec}); % Build CASADI function object
 dt = 0.1;
 
 % RK4 integration for dynamics constraints
-s_tot = 0;
 for i = 1:N-1
    k1 = f(X(:,i), U(:,i));   
    k2 = f(X(:,i) + dt/2*k1, U(:,i));
@@ -100,15 +99,14 @@ for i = 1:N-1
 end
 
 %% Path constraints
-opti.subject_to(E_LAT <= track.width);
+%opti.subject_to(E_LAT <= track.width);
 % Input an obstacle avoidance constraint later
 
 %% Friction constraints
 mu = 0.7; % avg friction coefficient for roads (assume rear wheel drive
 
-% Redefine equations for optimization variable constraints
-ALPHA_F = DELTA - atan2( VY(1:N) + lf * WZ(1:N), VX(1:N));
-ALPHA_R = - atan2( VY(1:N) - lf * WZ(1:N) , VX(1:N));
+ALPHA_F = - DELTA + atan2( VY(1:N) + lf * WZ(1:N), VX(1:N));
+ALPHA_R = atan2( VY(1:N) - lf * WZ(1:N) , VX(1:N));
 
 F_YF = F_nf*Df*sin( Cf * atan2(1, Bf*ALPHA_F)); % Front Tire Lateral Force
 F_YR = F_nr*Dr*sin( Cr * atan2(1, Br*ALPHA_R)); % Rear Tire Lateral Force
@@ -118,7 +116,9 @@ opti.subject_to(F_YR.^2 + (ACCEL./2).^2 <= (mu.*F_nr).^2)
 
 %% State Constraints
 opti.subject_to(-2 <= E_LAT <= 2);
-opti.subject_to(VX <= 1);
+opti.subject_to(-2 <= VX <= 2);
+
+opti.subject_to(-1 <= VY <= 1);
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -127,23 +127,20 @@ opti.subject_to(-1 <= ACCEL <= 1);
 %% Miscellaneous Constraints
 DS = (VX.*cos(E_PSI)-VY.*sin(E_PSI))./(1 - get_curvature(S,track).*E_LAT);
 
-opti.subject_to(VX >= 0);
-opti.subject_to(DS >= 0); % no going backwards
-opti.subject_to(S <= track.trackLength);
+opti.subject_to(S >= 0); 
+opti.subject_to(DS > 0); % no going backwards
 
 %% Initial Conditions
 opti.set_initial(VX, 1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
-opti.set_initial(ACCEL, 0.5);
 
 %% Objective function
-opti.minimize(-sum(S));
+opti.minimize(-S(end));
 
 %% Optimization 
 opti.solver('ipopt');
 % opti.callback(@(i) plot(opti.debug.value(S)))
+opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
-
-sol.value(X)
 
 
 
