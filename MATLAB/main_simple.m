@@ -119,22 +119,3 @@ opti.solver('ipopt');
 % opti.callback(@(i) plot(opti.debug.value(S)))
 opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
