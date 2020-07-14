@@ -25,7 +25,7 @@ import casadi.*
 n = 4; % num_states
 d = 2; % num_controls
 
-N = 20; % NMPC Horizon
+N = 10; % NMPC Horizon
 
 opti = Opti();
 
@@ -109,13 +109,15 @@ DS = V(1:N).*(cos(E_PSI(1:N) + BETA))./(1 - E_LAT(1:N)*k);
 opti.subject_to(DS > 0); % no going backwards
 
 %% Initial Conditions
-opti.set_initial(V(1), 0.5); % Bicylce Model ill-defined for slow velocities
+opti.set_initial(V(1), 0.5); % Bicycle Model ill-defined for slow velocities
 
 %% Objective function
-opti.minimize(-sumsqr(S));
+opti.minimize(-S(end));
 
 %% Optimization 
 opti.solver('ipopt');
 % opti.callback(@(i) plot(opti.debug.value(S)))
 opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
+sol.value(X)
+sol.value(U)
