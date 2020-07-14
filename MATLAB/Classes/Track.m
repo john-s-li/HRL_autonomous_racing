@@ -28,12 +28,12 @@ classdef Track
                     2, 0;
                     pi/2 * 1, -pi/2 * 1 / (pi/2)];
                 
-            spec = [pi/2*4, -4;
-                    pi/2*4, -4;
-                    pi/2*4, -4;
-                    pi/2*4, -4]; % Test circle with radius (don't deal with curvature
-                                 % prob during optimization over horizon )
-                
+%             spec = [pi/2*4, -4;
+%                     pi/2*4, -4;
+%                     pi/2*4, -4;
+%                     pi/2*4, -4]; % Test circle with radius (don't deal with curvature
+%                                  % prob during optimization over horizon )
+%                 
                     
             % Compute the (x,y) points of the track ----------------
             % pointAndTangent = [x, y, psi, cumulative s, segment length, signed curvature]
