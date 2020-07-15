@@ -123,21 +123,21 @@ print_debug = 0;
 
 c_opt = 0;
 
-x0 = repmat(x_curv,1,N+1);
-u0 = repmat(u_curv,1,N);
+
 
 while (x_curv(1) <= track.trackLength)
+    
+    x0 = repmat(x_curv,1,N+1);
+    u0 = repmat(u_curv,1,N);
     
     opti.set_initial(X, x0); % Bicylce Model and Pacejka Tyre model ill-defined 
                              % for slow velocities
     opti.set_initial(U, u0);
     opti.subject_to(X(:,1) == x0(:,1));
-    %opti.subject_to(U(:,1) == u0(:,1));
+    % opti.subject_to(U(:,1) == u0(:,1));
     
-    % NOTE: need all IC lines. Opti() is weird in this sense...
-     
     % These below are helpful debugging commands
-    % opti.callback(@(i) display(opti.debug.value(X))) % Print out values @ each iteration
+    opti.callback(@(i) display(opti.debug.value(X))) % Print out values @ each iteration
     % opti.debug.g_describe(7) % This is to help look at infeasibilities
     
     opti.solver('ipopt');
@@ -149,22 +149,20 @@ while (x_curv(1) <= track.trackLength)
     end
     
     x_opt = sol.value(X);
-    u_opt = sol.value(U)
+    u_opt = sol.value(U);
     
     c_opt = c_opt + 1;
     str = ['Optimizations complete: ', num2str(c_opt)];
     disp(str)
     
     % Extract the first optimal control input
-    u_NMPC = u_opt(:,1);
-    u_log = [u_log, u_NMPC]; 
+    u_curv = u_opt(:,1);
+    u_log = [u_log, u_curv]; 
     
     % Apply optimal control to system
-    x_curv = vehicleSim(x_curv, u_NMPC, dt, vehParams, track);
+    x_curv = vehicleSim(x_curv, u_curv, dt, vehParams, track);
     x_log = [x_log, x_curv];
         
-    x0 = x_opt;
-    u0 = u_opt;
 end
 
 % % opti.callback(@(i) plot(opti.debug.value(S)))
