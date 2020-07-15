@@ -42,7 +42,6 @@ E_PSI = X(3,:);
 V = X(4,:);
 
 %% Build the ODE f(x,u) for dx = f(x,u) for CASADI Opti() stack 
-
 x = MX.sym('x',n,1);
 u = MX.sym('u',d,1);
 
@@ -56,7 +55,7 @@ v = x(4);
 
 % Define the ODEs
 beta = atan((lr/(lf+lr))*tan(delta));
-k = 1/4; % curvature for a circle with constant radius = 4 (Counter-CW)
+k = 1/-4; % curvature for a circle with constant radius = 4 (Counter-CW)
 
 ds = v*(cos(e_psi + beta))/(1 - e_lat*k);
 de_lat = v*sin(e_psi + beta);
@@ -69,34 +68,19 @@ f = Function('f',{x,u},{f_vec}); % Build CASADI function object
 %% Dynamics Constraints
 dt = 0.1;
 
-% Create an integrator to discretize the system
-intg_options = struct;
-intg_options.tf = dt;
-intg_options.simplify = true;
-intg_options.number_of_finite_elements = 4; % not sure what this is...
-
-% DAE Problem structure
-dae = struct;
-dae.x = x;
-dae.p = u;
-dae.ode = f(x,u);
-
-intg = integrator('intg','rk', dae, intg_options);
-
-x0 = [0; 0; 0; 1.0]; % Initial Conditions
-
-res = intg('x0',x0);
-x_next = res.xf;
-
-F = Function('F',{x,u},{x_next},{'x','u'},{'x_next'});
-
-for i=1:N
-   opti.subject_to(X(:,i+1) == F(X(:,i),U(:,i))); 
+for k=1:N % loop over control intervals
+   % Runge-Kutta 4 integration
+   k1 = f(X(:,k),         U(:,k));
+   k2 = f(X(:,k)+dt/2*k1, U(:,k));
+   k3 = f(X(:,k)+dt/2*k2, U(:,k));
+   k4 = f(X(:,k)+dt*k3,   U(:,k));
+   x_next = X(:,k) + dt/6*(k1+2*k2+2*k3+k4); 
+   opti.subject_to(X(:,k+1)==x_next); % close the gaps
 end
 
 %% State Constraints
 opti.subject_to(-track.width <= E_LAT <= track.width);
-opti.subject_to(-2 <= V <= 2); 
+opti.subject_to(-4 <= V <= 4); 
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -109,15 +93,17 @@ DS = V(1:N).*(cos(E_PSI(1:N) + BETA))./(1 - E_LAT(1:N)*k);
 opti.subject_to(DS > 0); % no going backwards
 
 %% Initial Conditions
-opti.set_initial(V(1), 0.5); % Bicycle Model ill-defined for slow velocities
+opti.set_initial(X(:,1),[0.0;0.0;0.0;1.0]); % Bicycle Model ill-defined for slow velocities
+opti.subject_to(X(:,1) == [0.0;0.0;0.0;1.0]); % Must have this to make sure first column does NOT vary
 
 %% Objective function
-opti.minimize(-S(end));
+opti.minimize(-sum(S));
 
 %% Optimization 
 opti.solver('ipopt');
 % opti.callback(@(i) plot(opti.debug.value(S)))
 opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
-sol.value(X)
-sol.value(U)
+opti.debug.value(X)
+%sol.value(X)
+%sol.value(U)
