@@ -13,7 +13,7 @@ track = Track(0.8); % Make a track object
 vx_ref = 0.8;
 
 tspan = [0 20];
-x0 = [1.0; 0; 0; 0.2; 0; 0.3]; 
+x0 = [1.0; 0; 0; 0.0; 0; 0.0]; % start aligned and on centerline with v0 = 1.0 m/s
 
 opts = odeset('RelTol', 1e-3);
 
