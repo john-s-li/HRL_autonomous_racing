@@ -63,14 +63,15 @@ s = x(5); % arc length on centerline
 e_lat = x(6); % later error wrt/track centerline
 
 % Tire Split Angles (Negative due to our coordinate frame)
-alpha_f = delta - atan2( vy + lf * wz, vx );
-alpha_r = - atan2( vy - lf * wz , vx);
+alpha_f = delta - atan( (vy + lf * wz) / vx );
+alpha_r = - atan( (vy - lf * wz) / vx);
 
 F_nf = lf/(lf+lr)*m*g; % Front Tire Normal Load
 F_nr = lr/(lf+lr)*m*g; % Rear Tire Normal Load
 
-F_yf = F_nf*Df*sin( Cf * atan2(1, Bf*alpha_f)); % Front Tire Lateral Force
-F_yr = F_nr*Dr*sin( Cr * atan2(1, Br*alpha_r)); % Rear Tire Lateral Force
+F_yf = F_nf*Df*sin( Cf * atan(Bf*alpha_f)); % Front Tire Lateral Force
+F_yr = F_nr*Dr*sin( Cr * atan(Br*alpha_r)); % Rear Tire Lateral Force
+
 
 % ODEs
 % NOTE: for now, keep k(s) constant (sym variables don't work with logical operators)
@@ -100,25 +101,25 @@ for i = 1:N-1
 end
 
 %% Path constraints
-opti.subject_to(E_LAT <= track.width);
+opti.subject_to(-track.width <= E_LAT <= track.width);
 % Input an obstacle avoidance constraint later
 
 %% Friction constraints
 mu = 0.7; % avg friction coefficient for roads (assume rear wheel drive
 
 % Redefine equations for optimization variable constraints
-ALPHA_F = DELTA - atan2( VY(1:N) + lf * WZ(1:N), VX(1:N));
-ALPHA_R = - atan2( VY(1:N) - lf * WZ(1:N) , VX(1:N));
+ALPHA_F = DELTA - atan( (VY(1:N) + lf * WZ(1:N)) ./ VX(1:N));
+ALPHA_R = - atan( ( VY(1:N) - lf * WZ(1:N) ) ./ VX(1:N));
 
-F_YF = F_nf*Df*sin( Cf * atan2(1, Bf*ALPHA_F)); % Front Tire Lateral Force
-F_YR = F_nr*Dr*sin( Cr * atan2(1, Br*ALPHA_R)); % Rear Tire Lateral Force
+F_YF = F_nf*Df*sin( Cf * atan(Bf*ALPHA_F)); % Front Tire Lateral Force
+F_YR = F_nr*Dr*sin( Cr * atan(Br*ALPHA_R)); % Rear Tire Lateral Force
 
-opti.subject_to(F_YF.^2 <= (mu.*F_nf).^2);
-opti.subject_to(F_YR.^2 + (ACCEL./2).^2 <= (mu.*F_nr).^2)
+%opti.subject_to(F_YF.^2 <= (mu.*F_nf).^2);
+%opti.subject_to(F_YR.^2 + (ACCEL./2).^2 <= (mu.*F_nr).^2)
 
 %% State Constraints
-opti.subject_to(-2 <= E_LAT <= 2);
-opti.subject_to(VX <= 1);
+
+opti.subject_to(0 <= VX <= 3);
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -127,20 +128,18 @@ opti.subject_to(-1 <= ACCEL <= 1);
 %% Miscellaneous Constraints
 DS = (VX.*cos(E_PSI)-VY.*sin(E_PSI))./(1 - get_curvature(S,track).*E_LAT);
 
-opti.subject_to(VX >= 0);
 opti.subject_to(DS >= 0); % no going backwards
-opti.subject_to(S <= track.trackLength);
 
 %% Initial Conditions
 opti.set_initial(VX, 1.0); % Bicylce Model and Pacejka Tyre model ill-defined for slow velocities
 opti.set_initial(ACCEL, 0.5);
 
 %% Objective function
-opti.minimize(-sum(S));
+opti.minimize(-S(end));
 
 %% Optimization 
 opti.solver('ipopt');
-% opti.callback(@(i) plot(opti.debug.value(S)))
+opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
 
 sol.value(X)

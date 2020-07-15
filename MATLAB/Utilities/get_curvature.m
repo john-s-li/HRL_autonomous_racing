@@ -5,13 +5,13 @@ function k = get_curvature(s, Track)
     % s: curvilinear abscissa in which curvature needs to be evaluated
     % Track: class Track object
     
-    while s > Track.trackLength
-       s = s - track.trackLength; 
-    end
+%     if_else(s > Track.trackLength, mod(s, Track.trackLength), s);
+%             
+%     % Given s in [0, trackLength], compute the curvature
+%     [index,~] = find(s_r >= Track.pointAndTangent(:,4) & ... 
+%                      s_r < Track.pointAndTangent(:,4) + Track.pointAndTangent(:,5));
+%                                   
+%     k = Track.pointAndTangent(index,end); 
     
-    % Given s in [0, trackLength], compute the curvature
-    [index,~] = find(s >= Track.pointAndTangent(:,4) & ... 
-                     s < Track.pointAndTangent(:,4) + Track.pointAndTangent(:,5));
-                                  
-    k = Track.pointAndTangent(index,end); 
+    k = 1/-4;
 end

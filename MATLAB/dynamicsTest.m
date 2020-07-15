@@ -83,6 +83,7 @@ function [dx] = curv_bicycle_dyn(t,x,vx_ref,lr,lf,m,g,Bf,Br,Cf,Cr,Df,Dr,Iz,track
           de_psi;
           ds;
           de_lat];
+      
     % str = ['ODE call done and t = ', num2str(t)];
     % disp(str)
 end
