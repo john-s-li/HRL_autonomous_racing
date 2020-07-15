@@ -105,5 +105,6 @@ opti.solver('ipopt');
 opti.callback(@(i) display(opti.debug.value(X)))
 sol = opti.solve();
 opti.debug.value(X)
-opti.debug.value(U)
 
+%sol.value(X)
+%sol.value(U)
