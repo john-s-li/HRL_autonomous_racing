@@ -12,8 +12,20 @@ addpath('Classes')
 addpath('Utilities')
 
 %% Vehicle Model and Track Processing
-vehicleParams;
+vehParams = vehicleParams();
 track = Track(0.8); % initialize the track with width
+
+g =  vehParams.g;
+m  = vehParams.m;
+lf = vehParams.lf;
+lr = vehParams.lr;
+Iz = vehParams.Iz;
+Df = vehParams.Df;
+Cf = vehParams.Cf;
+Bf = vehParams.Bf;
+Dr = vehParams.Dr;
+Cr = vehParams.Cr;
+Br = vehParams.Br;
 
 %% Optimization Set Up
 % NOTE: use bicycle dynamics in curvilinear frame (no tire model in dynamics)
@@ -80,7 +92,7 @@ end
 
 %% State Constraints
 opti.subject_to(-track.width <= E_LAT <= track.width);
-opti.subject_to(-4 <= V <= 4); 
+% opti.subject_to(-4 <= V <= 4); 
 
 %% Input Box Constraints
 opti.subject_to(-0.5 <= DELTA <= 0.5);
@@ -91,6 +103,7 @@ BETA = atan((lr/(lf+lr))*tan(DELTA));
 DS = V(1:N).*(cos(E_PSI(1:N) + BETA))./(1 - E_LAT(1:N)*k);
 
 opti.subject_to(DS > 0); % no going backwards
+opti.subject_to(ACCEL >= 0);
 
 %% Initial Conditions
 opti.set_initial(X(:,1),[0.0;0.0;0.0;1.0]); % Bicycle Model ill-defined for slow velocities
@@ -99,11 +112,66 @@ opti.subject_to(X(:,1) == [0.0;0.0;0.0;1.0]); % Must have this to make sure firs
 %% Objective function
 opti.minimize(-sum(S));
 
-%% Optimization 
-opti.solver('ipopt');
-% opti.callback(@(i) plot(opti.debug.value(S)))
-opti.callback(@(i) display(opti.debug.value(X)))
-sol = opti.solve();
-opti.debug.value(X)
-opti.debug.value(U)
+%% Run the simulation
+x_curv = [0.0; 0.0; 0.0; 1.0];
+u_curv = [0.0; 0.0];
+
+x_log = x_curv;
+u_log = u_curv;
+
+print_debug = 0;
+
+c_opt = 0;
+
+x0 = repmat(x_curv,1,N+1);
+u0 = repmat(u_curv,1,N);
+
+while (x_curv(1) <= track.trackLength)
+    
+    opti.set_initial(X, x0); % Bicylce Model and Pacejka Tyre model ill-defined 
+                             % for slow velocities
+    opti.set_initial(U, u0);
+    opti.subject_to(X(:,1) == x0(:,1));
+    %opti.subject_to(U(:,1) == u0(:,1));
+    
+    % NOTE: need all IC lines. Opti() is weird in this sense...
+     
+    % These below are helpful debugging commands
+    % opti.callback(@(i) display(opti.debug.value(X))) % Print out values @ each iteration
+    % opti.debug.g_describe(7) % This is to help look at infeasibilities
+    
+    opti.solver('ipopt');
+    sol = opti.solve();
+    
+    if print_debug
+        opti.debug.value(X);
+        opti.debug.value(U);
+    end
+    
+    x_opt = sol.value(X);
+    u_opt = sol.value(U)
+    
+    c_opt = c_opt + 1;
+    str = ['Optimizations complete: ', num2str(c_opt)];
+    disp(str)
+    
+    % Extract the first optimal control input
+    u_NMPC = u_opt(:,1);
+    u_log = [u_log, u_NMPC]; 
+    
+    % Apply optimal control to system
+    x_curv = vehicleSim(x_curv, u_NMPC, dt, vehParams, track);
+    x_log = [x_log, x_curv];
+        
+    x0 = x_opt;
+    u0 = u_opt;
+end
+
+% % opti.callback(@(i) plot(opti.debug.value(S)))
+% opti.callback(@(i) display(opti.debug.value(X)))
+% sol = opti.solve();
+% opti.debug.value(X)
+% opti.debug.value(U)
+
+disp('Race Complete')
 
