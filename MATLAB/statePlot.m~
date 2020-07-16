@@ -1,0 +1,45 @@
+%% statePlot.m
+% Function to plot the state progression of vehicle on race track
+
+function = statePlot(x,u,dt)
+
+    t = 
+    vx = x(1,:);
+    vy = x(2,:);
+    wz = x(3,:);
+    e_psi = x(4,:);
+    s = x(5,:);
+    e_lat = x(6,:);
+    
+    accel = u(1,:);
+    delta = u(2,:);
+    
+    figure();
+    plot(t,vx,'DisplayName','$v_x$')
+    hold on
+    plot(t,vy,'DisplayName','$v_y$')
+    plot(t,wz,'DisplayName','$\omega_z$')
+    plot(t,s,'DisplayName','$s$')
+    plot(t,e_lat,'DisplayName','$e_{y}$')
+    plot(t,e_psi,'DisplayName','$e_{\psi}$')
+    hold off
+    xlabel('time $t$','Interpreter','latex')
+    title('Dynamic Bicycle Dynamics with PID Control','Interpreter','latex')
+    legend('show','Interpreter','latex','FontSize',14)
+    grid on
+    
+    figure();
+    plot(t,vx,'DisplayName','$v_x$')
+    hold on
+    plot(t,vy,'DisplayName','$v_y$')
+    plot(t,wz,'DisplayName','$\omega_z$')
+    plot(t,s,'DisplayName','$s$')
+    plot(t,e_lat,'DisplayName','$e_{y}$')
+    plot(t,e_psi,'DisplayName','$e_{\psi}$')
+    hold off
+    xlabel('time $t$','Interpreter','latex')
+    title('Dynamic Bicycle Dynamics with PID Control','Interpreter','latex')
+    legend('show','Interpreter','latex','FontSize',14)
+    grid on
+
+end
