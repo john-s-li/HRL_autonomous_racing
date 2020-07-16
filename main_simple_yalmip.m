@@ -26,7 +26,7 @@ constraints = [];
 cost = 0;
 
 % Weight matrix
-Q = 1;
+Q = -1;
 R = eye(2);
 
 % closed-loop trajectory
