@@ -3,9 +3,15 @@
 
 clc; clear; close all;
 
-% Add YALMIP and IPOPT Paths (for John)...comment out if necessary
-addpath(genpath('/home/johnathon/Documents/MATLAB/tbxmanager/toolboxes/yalmip/R20200116/all/YALMIP-master'))
-addpath(genpath('/home/johnathon/Documents/MATLAB/Ipopt'))
+user_is_john = 1;
+
+if user_is_john
+    % Add YALMIP and IPOPT Paths (for John)...comment out if necessary
+    addpath(genpath('/home/johnathon/Documents/MATLAB/tbxmanager/toolboxes/yalmip/R20200116/all/YALMIP-master'))
+    addpath(genpath('/home/johnathon/Documents/MATLAB/Ipopt'))
+end
+
+% Mandatory path appending
 addpath('Classes')
 addpath('Utilities')
 
@@ -18,7 +24,7 @@ nX = 6;
 nU = 2;
 
 % MPC Horizon
-N = 12;
+N = 6;
 
 % Time Discretization
 dt = 0.2;
@@ -46,8 +52,8 @@ x_log = x0;
 u_log = [];
 
 % Run the simulation and optimization
-while (x_curv(5) <= classTrack.trackLength)
-
+while (x_curv(4) <= track.trackLength)
+    
     tic;
     % Run optimization
     [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x_curv, dt, vehParams, classTrack);
@@ -63,7 +69,13 @@ while (x_curv(5) <= classTrack.trackLength)
     
     % Extract the first optimal control input
     u_opt = u_ftoc(:,1);
-    u_log = [u_log, u_opt]; 
+    u_log = [u_log, u_opt];
+    
+    % Add some Proportional Control for steering
+%     K_psi = 0.6;
+%     K_lat = 0.9;
+%     u_steer = -K_psi*(x_curv(5)) - K_lat*(x_curv(6));
+%     u_opt(2) = u_opt(2) + u_steer;
     
     % Apply optimal control to system
     x_curv_next = vehicleSim(x_curv, u_opt, dt, vehParams, classTrack);

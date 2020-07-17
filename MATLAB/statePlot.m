@@ -37,7 +37,7 @@ function statePlot(x,u,dt)
     plot(u_t,delta,'DisplayName','$\delta$')
     hold off
     xlabel('time $t$','Interpreter','latex')
-    title('Dynamic Bicycle Dynamics Optimal Control Sequence','Interpreter','latex')
+    title('Dynamic Bicycle Optimal Control Sequence','Interpreter','latex')
     legend('show','Interpreter','latex','FontSize',14)
     grid on
     

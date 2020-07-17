@@ -46,12 +46,13 @@ for i = 1:N
 
     % ODEs
     % NOTE: for now, keep k(s) constant (sym variables don't work with logical operators)
-
+    k = get_curvature(s,track);
+    
     dvx = 1/m*(m*accel - F_yf*sin(delta) + m*(wz*vy));
     dvy = 1/m*(F_yr + F_yf*sin(delta) - m*vx(1)*wz);
     dwz = 1/Iz*(F_yf*lf*cos(delta) - F_yr*lr); % No torque vectoring 
-    ds = (vx*cos(e_psi)-vy*sin(e_psi))/(1 - get_curvature(s,track)*e_lat);
-    de_psi = wz - get_curvature(s,track)*ds;
+    ds = (vx*cos(e_psi)-vy*sin(e_psi))/(1 - k*e_lat);
+    de_psi = wz - k*ds;
     de_lat = vx*sin(e_psi) + vy*cos(e_psi);
 
     % use discrete time integration
