@@ -12,13 +12,12 @@ function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track)
     
     i = 0; % Initialize the counter
     while (i*(deltaT) <= dt)
-        
         dx = vehDynamics(0,x,u,vehParams,track);
     
-        ds = dx(1);
-        de_lat = dx(2);
-        de_psi = dx(3);
-        dv = dx(4);
+    ds = dx(1);
+    de_lat = dx(2);
+    de_psi = dx(3);
+    dv = dx(4);
 
         s = s + deltaT*ds;
         e_lat = e_lat + deltaT*de_lat;

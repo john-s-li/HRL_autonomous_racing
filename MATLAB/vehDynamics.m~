@@ -1,0 +1,27 @@
+%% vehDynamics.m
+
+function dx = vehDynamics(t,x,u,vehParams)
+    s = x(1,i);
+    e_lat = x(2,i);
+    e_psi = x(3,i);
+    v = x(4,i);
+    
+    accel = u(1,i);
+    delta = u(2,i);
+
+    beta = atan((lr/(lf+lr))*tan(delta));
+    k = ; % curvature for a circle with constant radius = 4 (Counter-CW)
+    ds = v*(cos(e_psi + beta))/(1 - e_lat*k);
+    de_lat = v*sin(e_psi + beta);
+    de_psi = (v/lf)*sin(beta) - k*ds;
+    dv = accel;
+end
+
+function k = get_curvature(s, track)
+    s = mod(s, track.trackLength);
+    
+    % Heaviside Function (MUST be updated based on track's specification...see Track.m)
+    % Will parametrize later when source is to be published
+    c = -1;
+    k = c*(heaviside(s-3) - heaviside(s-4.57)) + ...
+end

@@ -21,7 +21,7 @@ nX = 4;
 nU = 2;
 
 % MPC Horizon
-N = 6;
+N = 2;
 
 % Time Discretization
 dt = 0.2;
@@ -60,10 +60,10 @@ while (x_curv(1) <= classTrack.trackLength)
         disp('Infeasibility Encountered')
         break;
     end
-    
+
     c_opt = c_opt + 1;
     fprintf('Optimization Num = %d and Solver Time Elapsed = %0.4f \n', c_opt, t_end);
-
+    
     % Extract the first optimal control input
     u_opt = u_ftoc(:,1);
     u_log = [u_log, u_opt];
@@ -71,8 +71,8 @@ while (x_curv(1) <= classTrack.trackLength)
     % Add some Proportional Control for steering
 %     K_psi = 0.6;
 %     K_lat = 0.9;
-%     u_steer = -K_psi*(x_curv(5)) - K_lat*(x_curv(6));
-%     u_opt(2) = u_opt(2) + u_steer;
+%     u_steer = -K_psi*(x_curv(3)) - K_lat*(x_curv(2));
+%     u_opt(2) = u_steer;
     
     % Apply optimal control to system
     x_curv_next = vehicleSim(x_curv, u_opt, dt, vehParams, classTrack);
