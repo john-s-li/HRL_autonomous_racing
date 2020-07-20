@@ -1,31 +1,45 @@
 %% plotLog.m
 % File to plot out simulation results
 
-function plotLog(x_log,track)
+function plotLog(x_log, vehParams, track)
 
-    % Plot the racetrack
-    num_pts = floor(10*track.trackLength);
+    % Plot should look like this (do at end)
+    % |  |  |  |  ||   s   |   % 5 rows x 4 columns
+    % |   RACE    || e_lat |  
+    % |   TRACK   || e_psi |  
+    % |  |  |  |  ||   v   |  
+
+    % Plot the track
+    plotTrack(track);
+    hold on
     
-    pts0 = zeros(num_pts,2);
-    pts1 = zeros(num_pts,2);
-    pts2 = zeros(num_pts,2);
+    % Plot the car
+    pause;
+    disp('Enter Space Bar to start animation')
     
-    for i = 1:num_pts
-       pts0(i,:) = track.getGlobalPosition(i * 0.1,  0);
-       pts1(i,:) = track.getGlobalPosition(i * 0.1,  track.width/2);
-       pts2(i,:) = track.getGlobalPosition(i * 0.1, -track.width/2);
+    % Initialize the polygon
+    car = re
+    
+    for i = 1:size(x_log,2)        
+        s = x_log(1,i);
+        e_lat = x_log(2,i);
+        e_psi = x_log(3,i);
+        v = x_log(4,i);
+        
+        % Get global position of the car
+        [vehX, vehY] = track.getGlobalPosition(s,e_lat);
+        
+        % Get the orientation of the car
+        vehYaw = track.getGlobalOrientation(s, e_psi);
+        
+        % Plot the car polygon
+        car = carPolygon(vehX, vehY, vehYaw, vehParams.l, vehParams.w);
+        
+        pause(0.01)
+        
     end
     
-    PaT = track.pointAndTangent;
+    % Plot the optimal trajectory (to do after figure out curvature function) 
     
-    figure()
-    plot(PaT(:,1),PaT(:,2),'o') % plot the x-y points of the spec
-    hold on
-    plot()
-    plot()
-    
-    % make function to return points for the car (need 
-    
-    % Add the car animation and optimal trajectory here later
-    
+        
 end

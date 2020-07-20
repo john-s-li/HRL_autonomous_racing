@@ -170,6 +170,56 @@ classdef Track
             
         end % -------
         
+        function yaw = getGlobalOrientation(obj,s,e_psi)
+           % Function to compute the yaw angle of the car in the (X,Y) frame
+           
+            s = mod(s, obj.trackLength);
+
+            % Compute the segment in which the car is on
+            PaT = obj.pointAndTangent;
+
+            [i, ~] = find(s >= PaT(:,4) & s < PaT(:,4) + PaT(:,5));
+
+            if PaT(i,end) == 0.0 % Segment is a straight line
+
+                % extract the tangent vector of the segment
+                psi = PaT(i,3);
+                
+            else
+                
+                r = 1/PaT(i,end); % extract the curvature
+
+                if r >= 0
+                    direction = 1;
+                else
+                    direction = -1;
+                end
+
+                % Extract angle of tangent at the initial point
+                if i ~= 1
+                    ang = PaT(i-1,3);
+                    centerX = PaT(i-1,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(i-1,2) + abs(r) * sin(ang + direction * pi/2); 
+
+                else
+                    ang = PaT(end,3);
+                    centerX = PaT(end,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(end,2) + abs(r) * sin(ang + direction * pi/2); 
+                end
+
+                spanAng = (s - PaT(i,4)) / (pi * abs(r)) * pi;
+                angleNormal = wrap(direction * pi/2 + ang);
+
+                angle = -(pi - abs(angleNormal)) * my_sign(angleNormal);
+                
+                psi = angle + direction*spanAng + pi/2;
+
+            end % -- IF/ELSE
+            
+            yaw = e_psi + psi; % Check to see if any wrapping is needed...
+                      
+        end
+        
         function [s,ey,epsi,flag] = getLocalPosition(obj,x,y,psi)
             error('notImplementedError')
         end % -------

@@ -1,34 +1,45 @@
 %% plotLog.m
 % File to plot out simulation results
 
-function plotLog(x_log,track)
+function plotLog(x_log, vehParams, track)
 
-    % Plot the racetrack
-    num_pts = floor(10*track.trackLength);
+    % Plot should look like this (do at end)
+    % |  |  |  |  ||   s   |   % 5 rows x 4 columns
+    % |   RACE    || e_lat |  
+    % |   TRACK   || e_psi |  
+    % |  |  |  |  ||   v   |  
+
+    % Plot the track
+    plotTrack(track);
+    hold on
     
-    pts0 = zeros(num_pts,2);
-    pts1 = zeros(num_pts,2);
-    pts2 = zeros(num_pts,2);
+    % Plot the car
+    pause;
+    disp('Enter Space Bar to start animation')
     
-    for i = 1:num_pts
+    % Initialize the polygon
+    
+    for i = 1:size(x_log,2)        
+        s = x_log(1,i);
+        e_lat = x_log(2,i);
+        e_psi = x_log(3,i);
+        v = x_log(4,i);
         
-       [pts0(i,1), pts0(i,2)] = track.getGlobalPosition(i * 0.1,  0);
-       [pts1(i,1), pts1(i,2)] = track.getGlobalPosition(i * 0.1,  track.width/2);
-       [pts2(i,1), pts2(i,2)] = track.getGlobalPosition(i * 0.1, -track.width/2);
+        % Get global position of the car
+        [vehX, vehY] = track.getGlobalPosition(s,e_lat);
+        
+        % Get the orientation of the car
+        vehYaw = track.getGlobalOrientation(s, e_psi);
+        
+        % Plot the car polygon
+        car = carPolygon(vehX, vehY, vehYaw, vehParams.l, vehParams.w);
+        pause(0.0001)
+        delete(car)
+        
     end
     
-    PaT = track.pointAndTangent;
+    % Plot the optimal trajectory (to do after figure out curvature function) 
     
-    figure()
-    plot(PaT(:,1),PaT(:,2),'o') % plot the x-y points of the spec
-    hold on
-    % Plot the track center, outer and inner tubes
-    plot(pts0(:,1),pts0(:,2),'k--')
-    plot(pts1(:,1),pts1(:,2),'k-')
-    plot(pts2(:,1),pts2(:,2),'k-')
-    
-    % make function to return points for the car polygon
-    
-    % Add the car animation and optimal trajectory here later
-    
+    disp('Animation Done')
+        
 end
