@@ -12,6 +12,10 @@ addpath('Utilities')
 vehParams = vehicleParams();
 classTrack = Track(0.8);
 
+plotLog([], classTrack)
+
+%%
+
 dt = 0.2;
 tspan = [0 10];
 x0 = [0; 0; 0; 1.0]; % start aligned and on centerline with v0 = 1.0 m/s

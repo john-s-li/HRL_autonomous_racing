@@ -116,21 +116,19 @@ classdef Track
             [i, ~] = find(s >= PaT(:,4) & s < PaT(:,4) + PaT(:,5));
             
             if PaT(i,end) == 0.0 % Segment is a straight line
-                
                 % extract the first and initial point of the segment
                 xf = PaT(i,1); yf = PaT(i,2); psi = PaT(i,3);
-                
                 if i ~= 1
                     xs = PaT(i-1,1); ys = PaT(i-1,2);
                 else
-                    xs = PaT(end,1); ys = PaT(end,2);
+                    xs = Pat(end,1); ys = PaT(end,2);
                 end
                 
                 % Compute the length of the segment
                 sL = PaT(i,5); % segment length
                 pS = s - PaT(i,4); % "progress" on the segment
                 
-                % Linear Combination
+                % Interpolation
                 c = pS/sL;
                 x = (1 - c) * xs + c * xf + ey * cos(psi + pi/2);
                 y = (1 - c) * ys + c * yf + ey * sin(psi + pi/2);
@@ -159,13 +157,10 @@ classdef Track
                 
                 spanAng = (s - PaT(i,4)) / (pi * abs(r)) * pi;
                 angleNormal = wrap(direction * pi/2 + ang);
-                
-                angle = -(pi - abs(angleNormal)) * my_sign(angleNormal);
-                
-                % X and Y position of last point in last segment
-                x = centerX + (abs(r) - direction * ey) * cos(angle + direction*spanAng);
-                y = centerY + (abs(r) - direction * ey) * sin(angle + direction*spanAng);
                    
+                
+                
+                
             end
             
         end % -------
