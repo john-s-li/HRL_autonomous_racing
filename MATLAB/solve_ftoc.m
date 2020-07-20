@@ -15,18 +15,22 @@ function [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x0, dt, vehParams,
 
     for i = 1:N
         % dynamics constraint
-        dx = vehDynamics(0,x(:,i),u(:,i),vehParams,track);
-
-        ds = dx(1);
-        de_lat = dx(2);
-        de_psi = dx(3);
-        dv = dx(4);
-
-        s_next = s + ds*dt;
-        e_lat_next = e_lat + de_lat*dt;
-        e_psi_next = e_psi + de_psi*dt;
-        v_next = v + dv*dt;
-
+        s = x(1,:);
+        e_lat = x(2,i);
+        e_psi = x(3,i);
+        v = x(4,i);
+        
+        accel = u(1,i);
+        delta = u(2,i);
+        
+        % Try RK4 Integration
+        k1 = vehDynamics(0,x(:,i),           u(:,i),vehParams,track,1);
+        k2 = vehDynamics(0,x(:,i) + dt/2*k1, u(:,i),vehParams,track,1);
+        k3 = vehDynamics(0,x(:,i) + dt/2*k2, u(:,i),vehParams,track,1);
+        k4 = vehDynamics(0,x(:,i) + dt*k3,   u(:,i),vehParams,track,1);
+        
+        x_next = x(:,i) + dt/6*(k1+2*k2+2*k3+k4);
+        
         constraints = [constraints;
             % Initial Condition
             x(:,1) == x0;
@@ -38,9 +42,9 @@ function [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x0, dt, vehParams,
             -1 <= accel <= 1;
             -0.5 <= delta <= 0.5;
             % Dynamics Constraint
-            x(:,i+1) == [s_next; e_lat_next; e_psi_next; v_next]];
+            x(:,i+1) == x_next];
 
-        cost = cost + x(1,i)'*Q*x(1,i) + u(:,i)'*R*u(:,i); % + s_psi(i)'*S*s_psi(i);
+        cost = cost - x(1,i)'*Q*x(1,i) + u(:,i)'*R*u(:,i); % + s_psi(i)'*S*s_psi(i);
     end
 
     options = sdpsettings('verbose',0,'debug',1,'solver','ipopt');

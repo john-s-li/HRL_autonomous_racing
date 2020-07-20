@@ -4,7 +4,11 @@
 function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track)
     
     % Simulate the vehicle state evolution over time
-    
+    s = x(1);
+    e_lat = x(2);
+    e_psi = x(3);
+    v = x(4);
+
     % Discretization Params
     deltaT = 0.001;
     

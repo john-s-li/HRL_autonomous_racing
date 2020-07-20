@@ -16,7 +16,7 @@ v_ref = 0.8;
 tspan = [0 10];
 x0 = [0; 0; 0; 1.0]; % start aligned and on centerline with v0 = 1.0 m/s
 
-[t,x] = ode45(@(t,x)vehDynamics(t,x,vehParams,classTrack), tspan, x0);
+[t,x] = ode45(@(t,x)vehDynamics(t,x,vehParams,classTrack,0), tspan, x0);
 
 s = x(:,1);
 e_lat = x(:,2);

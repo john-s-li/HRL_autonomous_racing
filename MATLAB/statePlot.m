@@ -22,7 +22,7 @@ function statePlot(x,u,dt)
     plot(x_t,v,'DisplayName','$v$','LineWidth',2)
     hold off
     xlabel('time $t$','Interpreter','latex')
-    title('Simplified Bicycle Dynamics with PID Control','Interpreter','latex')
+    title('Simplified Bicycle Dynamics','Interpreter','latex')
     legend('show','Interpreter','latex','FontSize',14)
     grid on
     

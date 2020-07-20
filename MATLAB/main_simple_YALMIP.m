@@ -21,7 +21,7 @@ nX = 4;
 nU = 2;
 
 % MPC Horizon
-N = 2;
+N = 6;
 
 % Time Discretization
 dt = 0.2;
@@ -31,11 +31,11 @@ constraints = [];
 cost = 0;
 
 % Weight Matrices
-Q = -1;
+Q = 1;
 R = eye(2);
 
 % Set initial condition
-x0 = [0.0; 0.0; 0.0; 1.0];
+x0 = [0.0; 0.2; 0.0; 1.0];
 
 % Assign the initial condition for the closed loop trajectory
 x_curv = x0; % curv = curvilinear
