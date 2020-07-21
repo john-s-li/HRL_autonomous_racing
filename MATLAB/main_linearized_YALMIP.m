@@ -22,10 +22,10 @@ nX = 4;
 nU = 2;
 
 % MPC Horizon
-N = 6;
+N = 5;
 
 % Time Discretization
-dt = 0.2;
+dt = 0.1;
 
 % Constraint and Cost
 constraints = [];
@@ -33,13 +33,27 @@ cost = 0;
 
 % Weight Matrices
 Q = 1;
-R = eye(2);
+R = diag([1,1]);
 
 % Set initial condition
-x0 = [0.0; 0.2; 0.0; 1.0];
+x0 = [0.0; 0.0; 0.0; 1.0];
+u0 = [0.0; 0.0];
+
+% Set the initial optimal trajectory and control sequence (from experiments)
+% Horizon should still remain on the straight segment at the beginning
+% Run main_simple_YALMIP with R = 0 set in vehicleDynamics.m and unsuppress
+% output to see what the values approximately be
+
+% NEED to update if horizon or dt changes
+
+s_predict = 0:dt:dt*N;
+x_opt = [s_predict; zeros(1,N+1); zeros(1,N+1); ones(1,N+1)];
+     
+u_opt = zeros(2,N);
 
 % Assign the initial condition for the closed loop trajectory
 x_curv = x0; % curv = curvilinear
+u_curv = u0;
 
 % Assessment Variables
 c_opt = 0;
@@ -53,13 +67,14 @@ u_log = [];
 while (x_curv(1) <= classTrack.trackLength)
     
     tic;
-    % Run optimization
-    [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x_curv, dt, vehParams, classTrack);
+    % Run optimization with linearized dynamics
+    [feas, x_opt, u_opt] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, u_opt, ...
+                                                 x_curv, u_curv, dt, vehParams, classTrack);
     t_end = toc;
     
-    x_ftoc
-    u_ftoc
-    
+    x_opt;
+    u_opt;
+        
     if feas ~= true
         disp('Infeasibility Encountered')
         break;
@@ -69,11 +84,11 @@ while (x_curv(1) <= classTrack.trackLength)
     fprintf('Optimization Num = %d and Solver Time Elapsed = %0.4f \n', c_opt, t_end);
     
     % Extract the first optimal control input
-    u_opt = u_ftoc(:,1);
-    u_log = [u_log, u_opt];
-    
-    % Apply optimal control to system
-    x_curv_next = vehicleSim(x_curv, u_opt, dt, vehParams, classTrack, 1);
+    u_curv = u_opt(:,1);
+    u_log = [u_log, u_curv];
+        
+    % Apply optimal control to non-linear system
+    x_curv_next = vehicleSim(x_curv, u_curv, dt, vehParams, classTrack);
     x_log = [x_log, x_curv_next];
        
     % Update the time
@@ -92,6 +107,9 @@ if feas == true
     str2 = ['Optimizations complete: ', num2str(c_opt)];
     disp(str2)
 end
+
+% Animation
+plotLog(x_log, vehParams, classTrack, 0.2)
 
 % Plot the results
 statePlot(x_log, u_log, dt)

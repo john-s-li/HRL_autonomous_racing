@@ -1,7 +1,7 @@
 %% vehicleSim.m
 % Simulation for vehicle
 
-function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track)
+function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track, optimizeFlag)
     
     % Simulate the vehicle state evolution over time
     s = x(1);
@@ -17,7 +17,7 @@ function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track)
     i = 0; % Initialize the counter
     while (i*(deltaT) <= dt)
         
-        dx = vehDynamics(0,x,u,vehParams,track);
+        dx = vehicleDynamics(0,x,u,vehParams,track, optimizeFlag);
     
         ds = dx(1);
         de_lat = dx(2);

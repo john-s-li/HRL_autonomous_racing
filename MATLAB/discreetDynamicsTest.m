@@ -30,7 +30,7 @@ while (x0(1) <= classTrack.trackLength)
     % Do some PID control
     u = PID(x0, 0.8);
     
-    dx = vehDynamics(0, x0, u, vehParams, classTrack, 0);
+    dx = vehicleDynamics(0, x0, u, vehParams, classTrack);
     
     x_next(1) = s + dt*dx(1);
     x_next(2) = e_lat + dt*dx(2);
@@ -46,7 +46,7 @@ while (x0(1) <= classTrack.trackLength)
 end
 
 % animation
-plotLog(x, vehParams, classTrack)
+plotLog(x, vehParams, classTrack, 0.02)
 
 s = x(1,:);
 e_lat = x(2,:);

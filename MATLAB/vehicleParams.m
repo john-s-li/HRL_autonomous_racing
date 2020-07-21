@@ -11,8 +11,8 @@ function p = vehicleParams()
     
     p.g = 9.81;
     p.m  = 1.98;
-    p.lf = p.l/2;
-    p.lr = p.l/2;
+    p.lf = 0.125;
+    p.lr = 0.125;
     p.Iz = 0.024;
     p.Df = 0.8 * p.m * p.g / 2.0;
     p.Cf = 1.25;

@@ -11,8 +11,8 @@ function plotTrack(track)
     
     for i = 1:num_pts        
        [pts0(i,1), pts0(i,2)] = track.getGlobalPosition(i * 0.1,  0);
-       [pts1(i,1), pts1(i,2)] = track.getGlobalPosition(i * 0.1,  track.width/2);
-       [pts2(i,1), pts2(i,2)] = track.getGlobalPosition(i * 0.1, -track.width/2);
+       [pts1(i,1), pts1(i,2)] = track.getGlobalPosition(i * 0.1,  track.width);
+       [pts2(i,1), pts2(i,2)] = track.getGlobalPosition(i * 0.1, -track.width);
     end
     
     PaT = track.pointAndTangent;

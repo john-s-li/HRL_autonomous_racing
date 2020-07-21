@@ -1,7 +1,7 @@
 %% plotLog.m
 % File to plot out simulation results
 
-function plotLog(x_log, vehParams, track)
+function plotLog(x_log, vehParams, track, pause_time)
 
     % Plot should look like this (do at end)
     % |  |  |  |  ||   s   |   % 5 rows x 4 columns
@@ -14,8 +14,8 @@ function plotLog(x_log, vehParams, track)
     hold on
     
     % Plot the car
-    pause;
     disp('Enter Space Bar to start animation')
+    pause;
     
     % Initialize the polygon
     
@@ -33,7 +33,7 @@ function plotLog(x_log, vehParams, track)
         
         % Plot the car polygon
         car = carPolygon(vehX, vehY, vehYaw, vehParams.l, vehParams.w);
-        pause(0.0001)
+        pause(pause_time)
         delete(car)
         
     end

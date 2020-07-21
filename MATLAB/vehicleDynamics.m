@@ -1,6 +1,6 @@
-%% vehDynamics.m
+%% vehicleDynamics.m
 
-function dx = vehDynamics(t,x,u,vehParams,track,optimize_flag)
+function dx = vehicleDynamics(t,x,u,vehParams,track)
 
     lf = vehParams.lf;
     lr = vehParams.lr;
@@ -15,12 +15,8 @@ function dx = vehDynamics(t,x,u,vehParams,track,optimize_flag)
 
     beta = atan((lr/(lf+lr))*tan(delta));
     
-    if optimize_flag
-        k = 1/-4;
-    else
-        k = get_curvature(s, track);
-    end
-   
+    k = get_curvature(s, track);
+       
     ds = v*(cos(e_psi + beta))/(1 - e_lat*k);
     de_lat = v*sin(e_psi + beta);
     de_psi = (v/lf)*sin(beta) - k*ds;
