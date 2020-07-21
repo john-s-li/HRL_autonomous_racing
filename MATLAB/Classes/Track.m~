@@ -19,27 +19,23 @@ classdef Track
             % radius > 0 = counter-clockwise angle span
             % radius = 0 = straight line
             
-            s = 2;
+            shape = 'lin
             
-            if s == 1
-                spec = [3, 0;
-                        pi/2 * 1, -pi/2 * 1 / (pi/2);
-                        2, 0;
-                        pi/2 * 1, -pi/2 * 1 / (pi/2);
-                        6,0;
-                        pi/2 * 1, -pi/2 * 1 / (pi/2);
-                        2, 0;
-                        pi/2 * 1, -pi/2 * 1 / (pi/2)];
+            spec = [3, 0;
+                    pi/2 * 1, -pi/2 * 1 / (pi/2);
+                    2, 0;
+                    pi/2 * 1, -pi/2 * 1 / (pi/2);
+                    6,0;
+                    pi/2 * 1, -pi/2 * 1 / (pi/2);
+                    2, 0;
+                    pi/2 * 1, -pi/2 * 1 / (pi/2)];
                 
-            elseif s == 2         
-                spec = [pi/2*7, -7;
-                        pi/2*7, -7;
-                        pi/2*7, -7;
-                        pi/2*7, -7];
-                    
-            elseif s == 3
-                spec = [9,0];
-            end
+                      
+            spec = [pi/2*4, -4;
+                    pi/2*4, -4;
+                    pi/2*4, -4;
+                    pi/2*4, -4]; % Test circle with radius (don't deal with curvature
+                                 % prob during optimization over horizon )        
                          
             % Compute the (x,y) points of the track ----------------
             % pointAndTangent = [x, y, psi, cumulative s, segment length, signed curvature]

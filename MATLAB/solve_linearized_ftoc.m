@@ -10,12 +10,12 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
     x0 = x_curv;
     u0 = u_curv;
     
+    % extend u_opt
+    u_opt = [u_opt u_opt(:,end)];
+    
     % constraint & cost
     constraints = [];
     cost = 0;
-    
-    % extend u_opt
-    u_opt = [u_opt u_opt(:,end)];
     
     for i = 1:N
         % dynamics constraint
@@ -32,11 +32,11 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
         k = get_curvature(x_opt(1,i+1), track);
         
         if i == 1
-             dx = A_gen(x0, u0, k)*x(:,i) + ...
-                  B_gen(x0, u0, k)*u(:,i);
+            dx = A_gen(x0, u_opt(:,i+1), k)*x(:,i) + ...
+                 B_gen(x0, u_opt(:,i+1), k)*u(:,i);
         else
-            dx = A_gen(x_opt(:,i+1),u_opt(:,i),k)*x(:,i) + ...
-                 B_gen(x_opt(:,i+1),u_opt(:,i),k)*u(:,i);   
+            dx = A_gen(x_opt(:,i+1),u_opt(:,i+1),k)*x(:,i) + ...
+                 B_gen(x_opt(:,i+1),u_opt(:,i+1),k)*u(:,i);   
         end
        
         x_next = x(:,i) + dt*dx;
@@ -47,7 +47,7 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             % State Constraint
             % -track.width <= x(2,i) + s_psi(i) <= track.width;
             -track.width <= e_lat <= track.width;
-            -4 <= v <= 4;
+            0 <= v <= 4;
             % Input Constraint
             -1 <= accel <= 1;
             -0.5 <= delta <= 0.5;
@@ -55,9 +55,10 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             x(:,i+1) == x_next];
 
         cost = cost - s(i)'*Q*s(i) + u(:,i)'*R*u(:,i); % May need to linearize this also
+           
     end
 
-    options = sdpsettings('verbose',0,'debug',1,'solver','ipopt');
+    options = sdpsettings('verbose',0,'debug',1,'solver','gurobi');
     diagnostics = optimize(constraints, cost, options);
 
     % assign solutions
@@ -65,7 +66,6 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
         feas = true;
         x_ftoc = value(x);
         u_ftoc = value(u);
-        % slack = value(s_psi);
         JOpt = value(cost);  
     else
         feas = false;

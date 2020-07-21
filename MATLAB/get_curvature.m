@@ -13,7 +13,7 @@ function k = get_curvature(s, track)
 
     % Given s in [0, trackLength], compute the curvature
     [index,~] = find(s >= track.pointAndTangent(:,4) & ... 
-                     s < track.pointAndTangent(:,4) + track.pointAndTangent(:,5));
+                     s <= track.pointAndTangent(:,4) + track.pointAndTangent(:,5));
                                   
     k = track.pointAndTangent(index,end); 
 end

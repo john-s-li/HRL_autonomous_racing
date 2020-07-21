@@ -21,13 +21,9 @@ function [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x0, dt, vehParams,
         accel = u(1,i);
         delta = u(2,i);
         
-        % Try RK4 Integration
-        k1 = vehicleDynamics(0,x(:,i),           u(:,i),vehParams,track,1);
-        k2 = vehicleDynamics(0,x(:,i) + dt/2*k1, u(:,i),vehParams,track,1);
-        k3 = vehicleDynamics(0,x(:,i) + dt/2*k2, u(:,i),vehParams,track,1);
-        k4 = vehicleDynamics(0,x(:,i) + dt*k3,   u(:,i),vehParams,track,1);
+        dx = vehicleDynamics(0,x(:,i),u(:,i),vehParams,track); 
         
-        x_next = x(:,i) + dt/6*(k1+2*k2+2*k3+k4);
+        x_next = x(:,i) + dt*dx;
         
         constraints = [constraints;
             % Initial Condition
@@ -45,7 +41,7 @@ function [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x0, dt, vehParams,
         cost = cost - x(1,i)'*Q*x(1,i) + u(:,i)'*R*u(:,i); % + s_psi(i)'*S*s_psi(i);
     end
 
-    options = sdpsettings('verbose',0,'debug',1,'solver','ipopt');
+    options = sdpsettings('verbose',0,'debug',1,'solver','gurobi');
     diagnostics = optimize(constraints, cost, options);
 
     % assign solutions
