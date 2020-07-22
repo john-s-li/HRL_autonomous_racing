@@ -61,7 +61,7 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             x(:,i+1) == x_next];
 
 %         cost = cost - s(i)'*Q*s(i) + e_lat*10*e_lat + u(:,i)'*R*u(:,i); 
-        cost = cost + e_lat*20*e_lat + e_psi*10*e_psi + u(:,i)'*R*u(:,i);
+        cost = cost + e_lat*10*e_lat + e_lat*10*e_lat +u(:,i)'*R*u(:,i);
            
     end
 

@@ -25,7 +25,7 @@ nU = 2;
 N = 5;
  
 % Time Discretization
-dt = 0.1;
+dt = 0.2;
 
 % Constraint and Cost
 constraints = [];
@@ -33,9 +33,9 @@ cost = 0;
 
 % Weight Matrices
 Q = 1;
-R = diag([1,1]); % Need a way to smooth the steering angle...check dynamics?
+R = diag([1,10]); % Need a way to smooth the steering angle...check dynamics?
 
-% Set initial condition
+% Set initial condition 
 x0 = [0.0; 0.0; 0.0; 1.0];
 u0 = [0.0; 0.0];
 
@@ -43,8 +43,6 @@ u0 = [0.0; 0.0];
 % Horizon should still remain on the straight segment at the beginning
 % Run main_simple_YALMIP with R = 0 set in vehicleDynamics.m and unsuppress
 % output to see what the values approximately be
-
-% NEED to update if horizon or dt changes
 
 s_predict = 0:dt:dt*N;
 x_opt = [s_predict; zeros(1,N+1); zeros(1,N+1); ones(1,N+1)];
@@ -62,9 +60,17 @@ tot_time = 0;
 % Logging and animation
 x_log = x0;
 u_log = [];
+x_pred_log = [x0];
+x_traj_log = containers.Map;
+x_traj_log('1') = x_opt;
 
 % Run the simulation and optimization
 while (x_curv(1) <= classTrack.trackLength)
+    
+    % Apply optimal control to non-linear system
+    x_curv_next = vehicleSim(x_curv, u_curv, dt, vehParams, classTrack);
+    
+    x_curv = x_curv_next;
     
     tic;
     % Run optimization with linearized dynamics
@@ -74,23 +80,26 @@ while (x_curv(1) <= classTrack.trackLength)
     
     x_opt;
     u_opt;
-        
+                
     if feas ~= true
         disp('Infeasibility Encountered')
         break;
     end
-
+       
     c_opt = c_opt + 1;
     fprintf('Optimization Num = %d and Solver Time Elapsed = %0.4f \n', c_opt, t_end);
-    
+        
     % Extract the first optimal control input
     u_curv = u_opt(:,1);
-    u_log = [u_log, u_curv];
         
-    % Apply optimal control to non-linear system
-    x_curv_next = vehicleSim(x_curv, u_curv, dt, vehParams, classTrack);
+
+    
+    % Log plotting variables
     x_log = [x_log, x_curv_next];
-       
+    x_pred_log = [x_pred_log x_opt(:,2)];
+    x_traj_log(num2str(c_opt+1)) = x_opt;
+    u_log = [u_log, u_curv];
+    
     % Update the time
     tot_time = tot_time + dt;
     
@@ -98,7 +107,7 @@ while (x_curv(1) <= classTrack.trackLength)
     fprintf('\n')
             
     % Update initial conditions for next iteration
-    x_curv = x_curv_next;
+    % x_curv = x_curv_next;
 end
 
 if feas == true
@@ -109,7 +118,7 @@ if feas == true
 end
 
 % Animation
-plotLog(x_log, vehParams, classTrack, 0.2)
+plotLog(x_log, x_traj_log, vehParams, classTrack, 0.2)
 
 % Plot the results
-statePlot(x_log, u_log, dt)
+statePlot(x_log, x_pred_log, u_log, dt)

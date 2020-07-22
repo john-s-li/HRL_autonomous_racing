@@ -19,7 +19,7 @@ classdef Track
             % radius > 0 = counter-clockwise angle span
             % radius = 0 = straight line
             
-            s = 2;
+            s = 1;
             
             if s == 1
                 spec = [3, 0;
@@ -32,10 +32,10 @@ classdef Track
                         pi/2 * 1, -pi/2 * 1 / (pi/2)];
                 
             elseif s == 2         
-                spec = [pi/2*7, -7;
-                        pi/2*7, -7;
-                        pi/2*7, -7;
-                        pi/2*7, -7];
+                spec = [pi/2*4, -4;
+                        pi/2*4, -4;
+                        pi/2*4, -4;
+                        pi/2*4, -4];
                     
             elseif s == 3
                 spec = [9,0];

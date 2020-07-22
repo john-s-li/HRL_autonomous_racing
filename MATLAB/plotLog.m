@@ -1,7 +1,7 @@
 %% plotLog.m
 % File to plot out simulation results
 
-function plotLog(x_log, vehParams, track, pause_time)
+function plotLog(x_log, x_traj_log, vehParams, track, pause_time)
 
     % Plot should look like this (do at end)
     % |  |  |  |  ||   s   |   % 5 rows x 4 columns
@@ -33,13 +33,20 @@ function plotLog(x_log, vehParams, track, pause_time)
         
         % Plot the car polygon
         car = carPolygon(vehX, vehY, vehYaw, vehParams.l, vehParams.w);
-        pause(pause_time)
-        delete(car)
         
+        % Plot the trajectory
+        traj = carTrajectoryPlot(x_traj_log(num2str(i)), track);
+        
+        pause(pause_time)
+        
+        %disp('Press a key to continue')
+        %pause;
+        
+        delete(car);
+        delete(traj);
     end
     
     % Plot the optimal trajectory (to do after figure out curvature function) 
-    
     disp('Animation Done')
         
 end
