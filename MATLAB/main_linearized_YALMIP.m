@@ -22,17 +22,17 @@ nX = 4;
 nU = 2;
 
 % MPC Horizon
-N = 5;
+N = 12;
  
 % Time Discretization
-dt = 0.2;
+dt = 0.1;
 
 % Constraint and Cost
 constraints = [];
 cost = 0;
 
 % Weight Matrices
-Q = 1;
+Q = diag([10]);
 R = diag([1,10]); % Need a way to smooth the steering angle...check dynamics?
 
 % Set initial condition 
@@ -63,21 +63,18 @@ u_log = [];
 x_pred_log = [x0];
 x_traj_log = containers.Map;
 x_traj_log('1') = x_opt;
+u_traj_log = containers.Map;
+u_traj_log('1') = u_opt;
 
 % Run the simulation and optimization
 while (x_curv(1) <= classTrack.trackLength)
-    
-    % Apply optimal control to non-linear system
-    x_curv_next = vehicleSim(x_curv, u_curv, dt, vehParams, classTrack);
-    
-    x_curv = x_curv_next;
-    
+     
     tic;
     % Run optimization with linearized dynamics
     [feas, x_opt, u_opt] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, u_opt, ...
                                                  x_curv, u_curv, dt, vehParams, classTrack);
     t_end = toc;
-    
+        
     x_opt;
     u_opt;
                 
@@ -91,13 +88,15 @@ while (x_curv(1) <= classTrack.trackLength)
         
     % Extract the first optimal control input
     u_curv = u_opt(:,1);
-        
-
     
+    % Apply optimal control to non-linear system
+    x_curv_next = vehicleSim(x_curv, u_curv, dt, vehParams, classTrack);
+            
     % Log plotting variables
     x_log = [x_log, x_curv_next];
     x_pred_log = [x_pred_log x_opt(:,2)];
     x_traj_log(num2str(c_opt+1)) = x_opt;
+    u_traj_log(num2str(c_opt+1)) = u_opt;
     u_log = [u_log, u_curv];
     
     % Update the time
@@ -107,7 +106,7 @@ while (x_curv(1) <= classTrack.trackLength)
     fprintf('\n')
             
     % Update initial conditions for next iteration
-    % x_curv = x_curv_next;
+    x_curv = x_curv_next;
 end
 
 if feas == true

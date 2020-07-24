@@ -39,8 +39,8 @@ function plotLog(x_log, x_traj_log, vehParams, track, pause_time)
         
         pause(pause_time)
         
-        %disp('Press a key to continue')
-        %pause;
+        % disp('Press a key to continue')
+        % pause;
         
         delete(car);
         delete(traj);

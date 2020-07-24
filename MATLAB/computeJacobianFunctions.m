@@ -27,9 +27,9 @@ de_psi = (v/lf)*sin(beta) - k*ds;
 dv = accel;
 
 f = [ds;
-      de_lat;
-      de_psi;
-      dv];
+     de_lat;
+     de_psi;
+     dv];
 
 A = jacobian(f,x);
 B = jacobian(f,u);

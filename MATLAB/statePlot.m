@@ -39,9 +39,9 @@ function statePlot(x,x_pred,u,dt)
     plot(x_t,v_p,'--','color',c4,'DisplayName','$v_p$','LineWidth',2)
     
     % Add vertical dashed lines 
-    for i = 1:length(x_t)
-        xline(x_t(i),'-.', 'HandleVisibility','off');
-    end
+%     for i = 1:length(x_t)
+%         xline(x_t(i),'-.', 'HandleVisibility','off');
+%     end
     
     hold off
     xlabel('time $t$','Interpreter','latex')
@@ -57,10 +57,10 @@ function statePlot(x,x_pred,u,dt)
     stairs(u_t,delta,'DisplayName','$\delta$','LineWidth',2)
     
     % Add vertical dashed lines 
-    for i = 1:length(x_t)
-        xline(x_t(i),'-.','HandleVisibility','off');
-    end
-    
+%     for i = 1:length(x_t)
+%         xline(x_t(i),'-.','HandleVisibility','off');
+%     end
+%     
     hold off
     xlabel('time $t$','Interpreter','latex')
     title('Dynamic Bicycle Optimal Control Sequence','Interpreter','latex')

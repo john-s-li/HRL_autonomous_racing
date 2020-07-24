@@ -6,12 +6,9 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
     x = sdpvar(nX, N+1); % [s; e_lat; e_psi; v]
     u = sdpvar(nU, N);   % [accel; delta]
     % s_psi = sdpvar(1,N+1); % Slack variable
-    
-    x0 = x_curv;
-    u0 = u_curv;
-    
+      
     % extend u_opt
-    u_opt = [u_opt u_opt(:,end-1)];
+    u_opt = [u_opt(:,2:end) u_opt(:,end)];
     
     % constraint & cost
     constraints = [];
@@ -37,31 +34,34 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
         k = get_curvature(x_opt(1,i+1), track);
         
         if i == 1
-            dx = A_gen(x0, u_opt(:,i+1), k)*x(:,i) + ...
-                 B_gen(x0, u_opt(:,i+1), k)*u(:,i);
+            dx = A_gen(x_curv, u_opt(:,i), k)*x(:,i) + ...
+                 B_gen(x_curv, u_opt(:,i), k)*u(:,i);
         else
-            dx = A_gen(x_opt(:,i+1),u_opt(:,i+1),k)*x(:,i) + ...
-                 B_gen(x_opt(:,i+1),u_opt(:,i+1),k)*u(:,i);   
+            dx = A_gen(x_opt(:,i+1),u_opt(:,i),k)*x(:,i) + ...
+                 B_gen(x_opt(:,i+1),u_opt(:,i),k)*u(:,i);   
         end
        
         x_next = x(:,i) + dt*dx;
         
         constraints = [constraints;
             % Initial Condition
-            x(:,1) == x0;
+            x(:,1) == x_curv;
             % State Constraint
             -track.width <= e_lat <= track.width;
             0 <= v <= 4;
             -pi/2 <= e_psi <= pi/2;
-            k_min <= k_car <= k_max;
             % Input Constraint
             -1 <= accel <= 1;
             -0.5 <= delta <= 0.5;
             % Dynamics Constraint
             x(:,i+1) == x_next];
 
-%         cost = cost - s(i)'*Q*s(i) + e_lat*10*e_lat + u(:,i)'*R*u(:,i); 
-        cost = cost + e_lat*20*e_lat + e_psi*10*e_psi + u(:,i)'*R*u(:,i);
+        % IDEA: smooth out the controls somehow...do a low pass filter like
+        % Quan! 
+        
+        % cost = cost - s(i)'*Q*s(i) + e_lat*10*e_lat + u(:,i)'*R*u(:,i); 
+        cost = cost + (v-1.0)'*Q*(v-1.0) + e_lat*10*e_lat + ...
+               e_psi*10*e_psi + u(:,i)'*R*u(:,i);
            
     end
 
