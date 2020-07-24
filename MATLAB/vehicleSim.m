@@ -33,8 +33,8 @@ function [x_curv_next] = vehicleSim(x, u, dt, vehParams, track)
     end
         
     % Some noise variables for robustness (implement xyz vector noise later)
-    upper = 0.05;
-    lower = 0.05;
+    upper = 0.01;
+    lower = 0.01;
     nv = lower + rand()*(upper-lower);
     
     v = v + nv;

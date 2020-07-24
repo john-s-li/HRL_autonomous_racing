@@ -48,7 +48,7 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             x(:,1) == x_curv;
             % State Constraint
             -track.width <= e_lat <= track.width;
-            0 <= v <= 4;
+            0 <= v <= 4.0;
             -pi/2 <= e_psi <= pi/2;
             % Input Constraint
             -1 <= accel <= 1;
@@ -57,13 +57,10 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             x(:,i+1) == x_next];
 
         % IDEA: smooth out the controls somehow...do a low pass filter like
-        % Quan! 
-        
-        % cost = cost - s(i)'*Q*s(i) + e_lat*10*e_lat + u(:,i)'*R*u(:,i); 
-        cost = cost + (v-1.0)'*Q*(v-1.0) + e_lat*10*e_lat + ...
-               e_psi*10*e_psi + u(:,i)'*R*u(:,i);
-           
+        % Quan!
+        cost = cost + e_lat*100*e_lat + u(:,i)'*R*u(:,i);
     end
+    cost = cost - (s(end)-x_curv(1))*1.0;
 
     options = sdpsettings('verbose',0,'debug',1,'solver','ipopt');
     diagnostics = optimize(constraints, cost, options);
