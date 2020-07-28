@@ -12,7 +12,7 @@ addpath('Utilities')
 vehParams = vehicleParams();
 classTrack = Track(0.8);
 
-dt = 0.02;
+dt = 0.1;
 x0 = [1.0; 0; 0.0; 0.0; 0.0; 0.0]; % [vx; vy; wz; s; e_lat; e_psi]
 
 % Logging Variables
@@ -35,7 +35,7 @@ while (x0(4) <= classTrack.trackLength)
     t = [t, t(end)+dt];
     
     % Update the IC
-    x0 = x_next
+    x0 = x_next;
 end
 
 % Animations
