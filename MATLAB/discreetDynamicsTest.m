@@ -12,14 +12,15 @@ addpath('Utilities')
 vehParams = vehicleParams();
 classTrack = Track(0.8);
 
-dt = 0.02;
-x0 = [0; 0; 0; 1.0]; % start aligned and on centerline with v0 = 1.0 m/s
+dt = 0.1;
+x0 = [0; 0.3; 0.3; 1.0]; % start aligned and on centerline with v0 = 1.0 m/s
 
 % Apply no acceleration and constant steering angle
 
 x = x0;
 x_next = zeros(size(x0,1),1);
 t = [0];
+u = [];
 
 while (x0(1) <= classTrack.trackLength)
     s = x0(1);
@@ -28,9 +29,10 @@ while (x0(1) <= classTrack.trackLength)
     v = x0(4);
     
     % Do some PID control
-    u = PID(x0, 0.8);
+    u_PID = PID(x0, 1.5);
+    u = [u, u_PID];
     
-    dx = vehicleDynamics(0, x0, u, vehParams, classTrack);
+    dx = vehicleDynamics(0, x0, u_PID, vehParams, classTrack);
     
     x_next(1) = s + dt*dx(1);
     x_next(2) = e_lat + dt*dx(2);
@@ -39,32 +41,15 @@ while (x0(1) <= classTrack.trackLength)
     
     x = [x, x_next];
     
-    t = [t, t(end)+0.2];
+    t = [t, t(end)+dt];
     
     % Update the IC
     x0 = x_next;
 end
 
-% animation
-plotLog(x, vehParams, classTrack, 0.02)
-
-s = x(1,:);
-e_lat = x(2,:);
-e_psi = x(3,:);
-v = x(4,:);
-
-figure()
-plot(t,s,'DisplayName','$s$','LineWidth',2)
-hold on
-plot(t,e_lat,'DisplayName','$e_{y}$','LineWidth',2)
-plot(t,e_psi,'DisplayName','$e_{\psi}$','LineWidth',2)
-plot(t,v,'DisplayName','$v$','LineWidth',2)
-hold off
-xlabel('time $t$','Interpreter','latex')
-title_str = ['Simplified Bicycle Dynamics'];
-title(title_str,'Interpreter','latex')
-legend('show','Interpreter','latex','FontSize',14)
-grid on
+% animation and plotting
+plotLog(x, [], vehParams, classTrack, dt)
+statePlot(x,[], u, dt)
 
 %% Control Functions
 function u = PID(x, v_ref)
