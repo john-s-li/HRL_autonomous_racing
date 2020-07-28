@@ -19,21 +19,28 @@ classdef Track
             % radius > 0 = counter-clockwise angle span
             % radius = 0 = straight line
             
-            spec = [3, 0;
-                    pi/2 * 1, -pi/2 * 1 / (pi/2);
-                    2, 0;
-                    pi/2 * 1, -pi/2 * 1 / (pi/2);
-                    6,0;
-                    pi/2 * 1, -pi/2 * 1 / (pi/2);
-                    2, 0;
-                    pi/2 * 1, -pi/2 * 1 / (pi/2)];
+            s = 1;
+            
+            if s == 1
+                spec = [3, 0;
+                        pi/2 * 1, -pi/2 * 1 / (pi/2);
+                        2, 0;
+                        pi/2 * 1, -pi/2 * 1 / (pi/2);
+                        6,0;
+                        pi/2 * 1, -pi/2 * 1 / (pi/2);
+                        2, 0;
+                        pi/2 * 1, -pi/2 * 1 / (pi/2)];
                 
-            spec = [pi/2*4, -4;
-                    pi/2*4, -4;
-                    pi/2*4, -4;
-                    pi/2*4, -4]; % Test circle with radius (don't deal with curvature
-                                 % prob during optimization over horizon )        
+            elseif s == 2         
+                spec = [pi/2*4, -4;
+                        pi/2*4, -4;
+                        pi/2*4, -4;
+                        pi/2*4, -4];
                     
+            elseif s == 3
+                spec = [9,0];
+            end
+                         
             % Compute the (x,y) points of the track ----------------
             % pointAndTangent = [x, y, psi, cumulative s, segment length, signed curvature]
             
@@ -111,8 +118,120 @@ classdef Track
         end % -------
         
         function [x,y] = getGlobalPosition(obj,s,ey)
-            error('notImplementedError')
+            % Coordinate transformation from curvilinear frame (e, ey) to
+            % intertial reference frame (X, Y)
+            
+            s = mod(s, obj.trackLength);
+            
+            % Compute the segment in which the car is on
+            PaT = obj.pointAndTangent;
+            
+            [i, ~] = find(s >= PaT(:,4) & s < PaT(:,4) + PaT(:,5));
+            
+            if PaT(i,end) == 0.0 % Segment is a straight line
+                
+                % extract the first and initial point of the segment
+                xf = PaT(i,1); yf = PaT(i,2); psi = PaT(i,3);
+                
+                if i ~= 1
+                    xs = PaT(i-1,1); ys = PaT(i-1,2);
+                else
+                    xs = PaT(end,1); ys = PaT(end,2);
+                end
+                
+                % Compute the length of the segment
+                sL = PaT(i,5); % segment length
+                pS = s - PaT(i,4); % "progress" on the segment
+                
+                % Linear Combination
+                c = pS/sL;
+                x = (1 - c) * xs + c * xf + ey * cos(psi + pi/2);
+                y = (1 - c) * ys + c * yf + ey * sin(psi + pi/2);
+                
+            else
+                r = 1/PaT(i,end); % extract the curvature
+                
+                if r >= 0
+                    direction = 1;
+                else
+                    direction = -1;
+                end
+                
+                % Extract angle of tangent at the initial point
+                if i ~= 1
+                    ang = PaT(i-1,3);
+                    centerX = PaT(i-1,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(i-1,2) + abs(r) * sin(ang + direction * pi/2); 
+                    
+                else
+                    ang = PaT(end,3);
+                    centerX = PaT(end,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(end,2) + abs(r) * sin(ang + direction * pi/2); 
+                    
+                end
+                
+                spanAng = (s - PaT(i,4)) / (pi * abs(r)) * pi;
+                angleNormal = wrap(direction * pi/2 + ang);
+                
+                angle = -(pi - abs(angleNormal)) * my_sign(angleNormal);
+                
+                % X and Y position of last point in last segment
+                x = centerX + (abs(r) - direction * ey) * cos(angle + direction*spanAng);
+                y = centerY + (abs(r) - direction * ey) * sin(angle + direction*spanAng);
+                   
+            end
+            
         end % -------
+        
+        function yaw = getGlobalOrientation(obj,s,e_psi)
+           % Function to compute the yaw angle of the car in the (X,Y) frame
+           
+            s = mod(s, obj.trackLength);
+
+            % Compute the segment in which the car is on
+            PaT = obj.pointAndTangent;
+
+            [i, ~] = find(s >= PaT(:,4) & s < PaT(:,4) + PaT(:,5));
+
+            if PaT(i,end) == 0.0 % Segment is a straight line
+
+                % extract the tangent vector of the segment
+                psi = PaT(i,3);
+                
+            else
+                
+                r = 1/PaT(i,end); % extract the curvature
+
+                if r >= 0
+                    direction = 1;
+                else
+                    direction = -1;
+                end
+
+                % Extract angle of tangent at the initial point
+                if i ~= 1
+                    ang = PaT(i-1,3);
+                    centerX = PaT(i-1,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(i-1,2) + abs(r) * sin(ang + direction * pi/2); 
+
+                else
+                    ang = PaT(end,3);
+                    centerX = PaT(end,1) + abs(r) * cos(ang + direction * pi/2); 
+                    centerY = PaT(end,2) + abs(r) * sin(ang + direction * pi/2); 
+                end
+
+                spanAng = (s - PaT(i,4)) / (pi * abs(r)) * pi;
+                angleNormal = wrap(direction * pi/2 + ang);
+
+                angle = -(pi - abs(angleNormal)) * my_sign(angleNormal);
+                
+                psi = angle + direction*spanAng + pi/2;
+
+            end % -- IF/ELSE
+            
+            yaw = e_psi + psi; % Check to see if any wrapping is needed...
+                      
+        end
         
         function [s,ey,epsi,flag] = getLocalPosition(obj,x,y,psi)
             error('notImplementedError')
@@ -140,5 +259,3 @@ function wrap_angle = wrap(angle)
         wrap_angle = angle;
     end
 end
-
-

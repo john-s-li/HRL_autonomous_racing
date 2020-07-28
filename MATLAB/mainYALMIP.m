@@ -70,13 +70,7 @@ while (x_curv(4) <= track.trackLength)
     % Extract the first optimal control input
     u_opt = u_ftoc(:,1);
     u_log = [u_log, u_opt];
-    
-    % Add some Proportional Control for steering
-%     K_psi = 0.6;
-%     K_lat = 0.9;
-%     u_steer = -K_psi*(x_curv(5)) - K_lat*(x_curv(6));
-%     u_opt(2) = u_opt(2) + u_steer;
-    
+        
     % Apply optimal control to system
     x_curv_next = vehicleSim(x_curv, u_opt, dt, vehParams, classTrack);
     x_log = [x_log, x_curv_next];
