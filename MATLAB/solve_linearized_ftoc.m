@@ -55,12 +55,14 @@ function [feas, x_ftoc, u_ftoc] = solve_linearized_ftoc(Q, R, N, nX, nU, x_opt, 
             -0.5 <= delta <= 0.5;
             % Dynamics Constraint
             x(:,i+1) == x_next];
-
-        % IDEA: smooth out the controls somehow...do a low pass filter like
-        % Quan!
-        cost = cost + e_lat*100*e_lat + u(:,i)'*R*u(:,i);
+          
+        cost = cost + u(:,i)'*R*u(:,i) + (x(2:3,i) - 100*x(2:3,i+1))'*eye(2)*(x(2:3,i) - x(2:3,i+1));
+        
+        if i ~= N
+           cost = cost + (u(2,i+1) - u(2,i))*10*(u(2,i+1) - u(2,i));
+        end
     end
-    cost = cost - (s(end)-x_curv(1))*1.0;
+    cost = cost - (s(end)-x_curv(1))*Q*(s(end)-x_curv(1));
 
     options = sdpsettings('verbose',0,'debug',1,'solver','ipopt');
     diagnostics = optimize(constraints, cost, options);

@@ -57,8 +57,8 @@ while (x_curv(1) <= classTrack.trackLength)
     [feas, x_ftoc, u_ftoc] = solve_ftoc(Q, R, N, nX, nU, x_curv, dt, vehParams, classTrack);
     t_end = toc;
     
-    x_ftoc
-    u_ftoc
+    x_ftoc;
+    u_ftoc;
     
     if feas ~= true
         disp('Infeasibility Encountered')

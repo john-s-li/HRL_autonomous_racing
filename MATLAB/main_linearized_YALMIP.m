@@ -22,7 +22,7 @@ nX = 4;
 nU = 2;
 
 % MPC Horizon
-N = 12;
+N = 7;
  
 % Time Discretization
 dt = 0.1;
@@ -32,7 +32,7 @@ constraints = [];
 cost = 0;
 
 % Weight Matrices
-Q = diag([10]);
+Q = diag([100]);
 R = diag([1,10]); % Need a way to smooth the steering angle...check dynamics?
 
 % Set initial condition 
@@ -45,7 +45,7 @@ u0 = [0.0; 0.0];
 % output to see what the values approximately be
 
 s_predict = 0:dt:dt*N;
-x_opt = [s_predict; zeros(1,N+1); zeros(1,N+1); ones(1,N+1)];
+x_opt = [s_predict; x0(2)*ones(1,N+1); x0(3)*ones(1,N+1); x0(4)*ones(1,N+1)];
      
 u_opt = zeros(2,N);
 
