@@ -12,18 +12,18 @@ addpath('Utilities')
 vehParams = vehicleParams();
 classTrack = Track(0.8);
 
-dt = 0.1;
+dt = 0.05;
 x0 = [1.0; 0; 0.0; 0.0; 0.0; 0.0]; % [vx; vy; wz; s; e_lat; e_psi]
 
 % Logging Variables
 x = x0;
 x_next = zeros(size(x0,1),1);
 t = [0];
-u = [0;0];
+u = [];
 
 while (x0(4) <= classTrack.trackLength)
     % Do some PID control
-    u_PID = get_PID(x0, 3.0);
+    u_PID = get_PID(x0, 2.0);
     u = [u, u_PID];
     
     dx = vehicleDynamics(0, x0, u_PID, vehParams, classTrack);

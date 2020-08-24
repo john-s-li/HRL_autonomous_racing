@@ -10,7 +10,7 @@ function statePlot(x,x_pred,u,dt)
     else
         % For PID or other non-optimization plotting purposes
         x_t = dt;
-        u_t = dt;
+        u_t = dt(:,1:end-1);
     end
     
     c1 = [0, 0.4470, 0.7410];
@@ -30,6 +30,7 @@ function statePlot(x,x_pred,u,dt)
     accel = u(1,:);
     delta = u(2,:);
     
+    figure()
     % Plot states
     % -------------------------------------------------------------------------------
     subplot(311)
